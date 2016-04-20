@@ -1,5 +1,5 @@
 [controller]
-192.168.122.X
+192.168.124.250 ansible_user=root ansible_ssh_pass=redhat
 
 [compute]
-192.168.122.X
+192.168.124.250 ansible_user=root ansible_ssh_pass=redhat

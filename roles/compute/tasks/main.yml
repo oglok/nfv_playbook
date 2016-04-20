@@ -1,0 +1,52 @@
+---
+- name: Modify GRUB
+  lineinfile:
+    dest: /etc/default/grub
+    backup: True
+    backrefs: True
+    regexp: '(^GRUB_CMDLINE_LINUX=.*)"$'
+    #regexp: "^(GRUB_CMDLINE_LINUX=".*)""
+    state: present
+    line: '\1 intel_iommu=on default_hugepagesz={{default_hugepagesz}} hugepagesz={{hugepagesz}}"'
+
+- name: Update GRUB
+  shell: "{{item}}"
+  with_items:
+    - grub2-mkconfig -o /boot/grub2/grub.cfg
+    - dracut --force
+
+- name: Create dir for huge pages
+  file: path=/mnt/huge state=directory mode=0755
+
+- name: Add hugepage dev in fstab
+  lineinfile:
+    dest: /etc/fstab
+    line: 'nodev /mnt/huge hugetlbfs pagesize={{hugepagesz}}B 0 0'
+    backup: True
+
+- name: Create Huge Pages Service
+  template:
+    src: "{{item.src}}"
+    dest: "{{item.dest}}"
+    mode: 0755
+  with_items:
+    - { src: 'templates/hugetlb-reserve-pages', dest: '/usr/lib/systemd/hugetlb-reserve-pages'}
+    - { src: 'templates/hugetlb-gigantic-pages.service', dest: '/usr/lib/systemd/system/hugetlb-reserve-pages.service'}
+
+- name: Permissions to hugepages service
+  shell: chmod +x /usr/lib/systemd/hugetlb-reserve-pages
+
+- name: Start service hugepages
+  service:
+    name: hugetlb-gigantic-pages
+    state: started
+
+- name: Disable KSM services
+  service:
+    name: "{{item}}"
+    state: stopped
+    with_items:
+      - ksmtuned
+      - ksm
+  notify:
+    - reboot

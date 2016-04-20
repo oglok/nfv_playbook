@@ -1,0 +1,7 @@
+---
+- hosts: compute
+  roles:
+    - compute
+#- hosts: controller
+#  roles:
+#    - controller
