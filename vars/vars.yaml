@@ -1,0 +1,4 @@
+---
+vars:
+  default_hugepagesz: 1G
+  hugepagesz: 1G

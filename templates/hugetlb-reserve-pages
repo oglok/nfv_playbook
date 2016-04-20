@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# This file goes in /usr/lib/systemd/hugetlb-reserve-pages
+
+totalmem=`dmidecode --type 17 | grep Size |grep MB | gawk '{sum+=$2} END {print sum/1024}'`
+hugepages=$(($totalmem-8))
+
+nodes_path=/sys/devices/system/node/
+if [ ! -d $nodes_path ]; then
+        echo "ERROR: $nodes_path does not exist"
+        exit 1
+fi
+
+reserve_pages()
+{
+        echo $1 > $nodes_path/$2/hugepages/hugepages-1048576kB/nr_hugepages
+}
+
+reserve_pages $((hugepages/2)) node0
+reserve_pages $((hugepages/2)) node1
