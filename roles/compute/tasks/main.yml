@@ -23,6 +23,8 @@
     dest: /etc/fstab
     line: 'nodev /mnt/huge hugetlbfs pagesize={{hugepagesz}}B 0 0'
     backup: True
+  notify:
+    - reboot
 
 - name: Create Huge Pages Service
   template:
@@ -31,10 +33,16 @@
     mode: 0755
   with_items:
     - { src: 'templates/hugetlb-reserve-pages', dest: '/usr/lib/systemd/hugetlb-reserve-pages'}
-    - { src: 'templates/hugetlb-gigantic-pages.service', dest: '/usr/lib/systemd/system/hugetlb-reserve-pages.service'}
+    - { src: 'templates/hugetlb-gigantic-pages.service', dest: '/usr/lib/systemd/system/hugetlb-gigantic-pages.service'}
+
+- name: Start SRIOV VFs
+  template:
+    src: 'templates/enablevfs.service'
+    dest: '/usr/lib/systemd/system/enablevfs.service'
+    mode: 0755
 
 - name: Permissions to hugepages service
-  shell: chmod +x /usr/lib/systemd/hugetlb-reserve-pages
+  file: path=/usr/lib/systemd/hugetlb-reserve-pages state=file mode=0755
 
 - name: Start service hugepages
   service:
