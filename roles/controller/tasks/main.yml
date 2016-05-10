@@ -1,0 +1,17 @@
+---
+- name: Modify Nova to include NUMA and Passthrough filters
+    lineinfile:
+      dest: /etc/nova/nova.conf
+      backup: True
+      backrefs: True
+      regexp: '(^scheduler_default_filters=.*)"$'
+      state: present
+      line: '\1 ,NUMATopologyFilter,PciPassthroughFilter"'
+
+- name: Disable RAM overcommit
+  shell: "openstack-config --set /etc/nova/nova.conf DEFAULT ram_allocation_ratio 1.0"
+
+- name: Restart Nova Scheduler
+  service:
+    name: openstack-nova-scheduler
+    state: restarted

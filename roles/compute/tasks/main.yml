@@ -1,13 +1,18 @@
 ---
+
+#Define isolation of physical CPUs for OS instructions
+- name: Calculate isolcpus
+  shell: "isolcpus=`gawk '($1=="processor"){pro=$3;} ($1=="core" && $4!=0){printf("%s%d", flag==0?"isolcpus=":",",pro);flag=1;}($1=="physical"){if (nb<$4+1){ nb=$4+1;};} END{print;}' /proc/cpuinfo`"
+  register: isolcpus
+
 - name: Modify GRUB
   lineinfile:
     dest: /etc/default/grub
     backup: True
     backrefs: True
     regexp: '(^GRUB_CMDLINE_LINUX=.*)"$'
-    #regexp: "^(GRUB_CMDLINE_LINUX=".*)""
     state: present
-    line: '\1 intel_iommu=on default_hugepagesz={{default_hugepagesz}} hugepagesz={{hugepagesz}}"'
+    line: '\1 intel_iommu=on {{isolcpus}} default_hugepagesz={{default_hugepagesz}} hugepagesz={{hugepagesz}}"'
 
 - name: Update GRUB
   shell: "{{item}}"
@@ -58,3 +63,20 @@
       - ksm
   notify:
     - reboot
+
+- name: Extract specific CPUs for later use
+  shell: "echo {{isolcpus}} | sed s/^isolcpus=//"
+  register: cpu_pinset
+
+- name: Configure NOVA for CPU pinning
+  lineinfile:
+    dest: /etc/nova/nova.conf
+    backup: True
+    backrefs: True
+    regexp: '^#vcpu_pin_set'
+    line: 'vcpu_pin_set={{cpu_pinset}}'
+
+- name: Restart Nova Compute service
+  service:
+    name: openstack-nova-compute
+    state: restarted

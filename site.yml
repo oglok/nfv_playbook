@@ -2,6 +2,6 @@
 - hosts: compute
   roles:
     - compute
-#- hosts: controller
-#  roles:
-#    - controller
+- hosts: controller
+  roles:
+    - controller
