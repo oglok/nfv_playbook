@@ -3,7 +3,7 @@ Description=Enable SR-IOV virtual functions
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh -c "echo {{numbervfs}} > /sys/bus/pci/devices/0000\:01\:00.1/sriov_numvfs"
+ExecStart=/bin/sh -c "echo {{numbervfs}} > /sys/bus/pci/devices/{{pci_address}}/sriov_numvfs"
 RemainAfterExit=yes
 
 [Install]

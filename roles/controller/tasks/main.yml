@@ -1,12 +1,12 @@
 ---
 - name: Modify Nova to include NUMA and Passthrough filters
-    lineinfile:
-      dest: /etc/nova/nova.conf
-      backup: True
-      backrefs: True
-      regexp: '(^scheduler_default_filters=.*)"$'
-      state: present
-      line: '\1 ,NUMATopologyFilter,PciPassthroughFilter"'
+  lineinfile:
+    dest: /etc/nova/nova.conf
+    backup: True
+    backrefs: True
+    regexp: '(^scheduler_default_filters=.*)"$'
+    state: present
+    line: '\1 ,NUMATopologyFilter,PciPassthroughFilter"'
 
 - name: Disable RAM overcommit
   shell: "openstack-config --set /etc/nova/nova.conf DEFAULT ram_allocation_ratio 1.0"
@@ -15,3 +15,21 @@
   service:
     name: openstack-nova-scheduler
     state: restarted
+
+- name: Mechanism Driver
+  lineinfile:
+    dest: /etc/neutron/plugins/ml2/ml2_conf.ini
+    backup: True
+    backrefs: True
+    regexp: '(^mechanism_drivers.*)"$'
+    state: present
+    line: '\1 ,sriovnicswitch"'
+
+- name: VLAN ranges
+  lineinfile:
+    dest: /etc/neutron/plugins/ml2/ml2_conf.ini
+    backup: True
+    backrefs: True
+    regexp: '^#network_vlan_ranges'
+    state: present
+    line: 'network_vlan_ranges = physnet_sriov:3012:3043'

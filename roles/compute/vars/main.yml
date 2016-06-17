@@ -2,3 +2,4 @@
 default_hugepagesz: 1G
 hugepagesz: 1G
 numbervfs: 8
+pci_address: 0000\:01\:00.1
